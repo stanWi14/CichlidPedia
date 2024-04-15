@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -60,7 +61,16 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-graphics-android:1.6.5")
+    implementation("com.google.firebase:firebase-firestore:24.11.0")
+    implementation("com.google.firebase:firebase-storage-ktx:20.3.0")
+    implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
+    implementation ("androidx.navigation:navigation-compose:2.7.1")
+    implementation("com.google.firebase:firebase-storage:20.3.0")
     testImplementation("junit:junit:4.13.2")
+
+    implementation ("com.github.bumptech.glide:glide:4.12.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.12.0")
+    implementation ("io.coil-kt:coil-compose:1.4.0")
 
 
     implementation ("com.google.accompanist:accompanist-pager:0.24.13-rc")

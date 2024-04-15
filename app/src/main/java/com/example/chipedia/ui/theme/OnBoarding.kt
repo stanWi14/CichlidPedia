@@ -34,9 +34,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.chipedia.module.OnBoardingItems
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -46,14 +46,16 @@ import kotlinx.coroutines.launch
 val colorTransparent = Color.Transparent
 val colorWhite = Color.White
 
-//val colorRed = Color(0xFFd2261f)
-val colorRed = Color.Red
+val colorRed = Color(0xFFd2261f)
+
+//val colorRed = Color.Red
 val colorBlue = Color(0xFF013d47)
+val coloeBlack = Color.Black
+val darkRedColor = Color(0xFF690505)
 
 @ExperimentalPagerApi
-@Preview
 @Composable
-fun OnBoarding() {
+fun OnBoarding(navController: NavController) {
     val items = OnBoardingItems.getData()
     val scope = rememberCoroutineScope()
     val pageState = rememberPagerState()
@@ -68,7 +70,11 @@ fun OnBoarding() {
         ) { page ->
             OnBoardingItem(items = items[page])
         }
-        BottomSection(size = items.size, index = pageState.currentPage) {
+        BottomSection(
+            size = items.size,
+            index = pageState.currentPage,
+            navController = navController
+        ) {
             if (pageState.currentPage + 1 < items.size) scope.launch {
                 pageState.scrollToPage(pageState.currentPage + 1)
             }
@@ -77,7 +83,12 @@ fun OnBoarding() {
 }
 
 @Composable
-fun BottomSection(size: Int, index: Int, onButtonClick: () -> Unit = {}) {
+fun BottomSection(
+    size: Int,
+    index: Int,
+    navController: NavController,
+    onButtonClick: () -> Unit = {}
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -87,9 +98,15 @@ fun BottomSection(size: Int, index: Int, onButtonClick: () -> Unit = {}) {
         // Indicators
         Indicators(size, index)
 
-        // FAB Next
+        // Next Button
         FloatingActionButton(
-            onClick = onButtonClick,
+            onClick = {
+                if (index + 1 < size) {
+                    onButtonClick()
+                } else {
+                    navController.navigate("menuScreen")
+                }
+            },
             contentColor = colorWhite,
             containerColor = colorBlue,
             modifier = Modifier

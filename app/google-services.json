@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "969790643127",
+    "project_id": "chipedia-b7697",
+    "storage_bucket": "chipedia-b7697.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:969790643127:android:1c408113dd756c3b74e632",
+        "android_client_info": {
+          "package_name": "com.example.chipedia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKmNOyV6SWXdhfdzs2CH7Tzyt0-sY5I5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
