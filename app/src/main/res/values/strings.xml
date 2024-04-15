@@ -10,6 +10,31 @@
     <string name="onBoardingText2">LoremIpsum</string>
     <string name="onBoardingText3">LoremIpsum</string>
 
+    // main menu
+    <string name="menuTitleAfrica">African Cichlid</string>
+    <string name="menuTitleAmerica">American Cichlid</string>
+    <string name="menuTitleAsia">Asian Cichlid</string>
+
+    // sub menu
+    <string name="menuTitleShowAll">Show All</string>
+    <string name="menuTitleTanganyika">Lake Tanganyika</string>
+    <string name="menuTitleMalawi">Lake Malawi</string>
+    <string name="menuTitleVictoria">Lake Victoria</string>
+    <string name="menuTitleMadagascar">Madagascar</string>
+    <string name="menuTitleCongo">West Africa</string>
+    <string name="menuTitleSouthAmerica">South America</string>
+    <string name="menuTitleCentralAmerica">Central America</string>
+    <string name="menuTitleIndia">India</string>
+
+    // sub menu
+    <string name="valueTanganyika">Tanganyika</string>
+    <string name="valueMalawi">Malawi</string>
+    <string name="valueVictoria">Victoria</string>
+    <string name="valueMadagascar">Madagascar</string>
+    <string name="valueCongo">West Africa</string>
+    <string name="valueSouthAmerica">South America</string>
+    <string name="valueCentralAmerica">Central America</string>
+    <string name="valueIndia">India</string>
 
 
 </resources>
