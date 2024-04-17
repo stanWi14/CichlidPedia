@@ -44,12 +44,21 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
 
+
+data class Document(
+    val colID: String,
+    val docID: String,
+    val marketName: String,
+    val sciName: String,
+    val imageUrl: String
+)
+
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(value: Int, navController: NavHostController) {
-    val propertyList =
-        remember { mutableStateOf<List<Triple<String, String, String>>>(emptyList()) }
+    val propertyList = remember { mutableStateOf<List<Document>>(emptyList()) }
 
     val collectionFish: String = stringResource(value)
     LaunchedEffect(value) {
@@ -85,12 +94,8 @@ fun ListScreen(value: Int, navController: NavHostController) {
             ) {
                 Spacer(modifier = Modifier.height(60.dp))
                 LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(propertyList.value) { (marketName, sciName, imageUrl) ->
-                        PropertyCard(
-                            marketName = marketName,
-                            sciName = sciName,
-                            imageUrl = imageUrl
-                        )
+                    items(propertyList.value) { document ->
+                        PropertyCard(document)
                     }
                 }
             }
@@ -99,7 +104,12 @@ fun ListScreen(value: Int, navController: NavHostController) {
 }
 
 @Composable
-fun PropertyCard(marketName: String, sciName: String, imageUrl: String) {
+fun PropertyCard(document: Document) {
+    // Extracting properties from the document
+    val marketName = document.marketName
+    val sciName = document.sciName
+    val imageUrl = document.imageUrl
+
     Card(
         modifier = Modifier.padding(8.dp)
     ) {
@@ -144,8 +154,6 @@ fun PropertyCard(marketName: String, sciName: String, imageUrl: String) {
                         fontStyle = FontStyle.Italic
                     ),
                     color = Color.White,
-//                    modifier = Modifier
-//                        .padding(top = 5.dp),
                     letterSpacing = 1.sp,
                 )
             }
@@ -153,22 +161,24 @@ fun PropertyCard(marketName: String, sciName: String, imageUrl: String) {
     }
 }
 
+
 private suspend fun loadData(
-    value: String,
-    propertyList: MutableState<List<Triple<String, String, String>>>
+    collectionName: String,
+    propertyList: MutableState<List<Document>>
 ) {
     val db = FirebaseFirestore.getInstance()
-    val propertyCollection = db.collection(value)
+    val propertyCollection = db.collection(collectionName)
 
     try {
         val documents = propertyCollection.get().await()
-        val properties = mutableListOf<Triple<String, String, String>>()
-        for (document in documents) {
+        val properties = mutableListOf<Document>()
+        for (document in documents.documents) {
             val sciName = document.getString("ScieName") ?: "N/A"
             val marketName = document.getString("MarketName") ?: "N/A"
-            val propID = document.id
-            val imageUrl = getFirstImageURL(propID)
-            properties.add(Triple(marketName, sciName, imageUrl))
+            val docID = document.id // Get the document ID
+            val colID = collectionName // Use the collection name as colID
+            val imageUrl = getFirstImageURL(docID) // Pass docID to getFirstImageURL
+            properties.add(Document(colID, docID, marketName, sciName, imageUrl))
         }
         propertyList.value = properties
     } catch (e: Exception) {
@@ -176,6 +186,7 @@ private suspend fun loadData(
         e.printStackTrace()
     }
 }
+
 
 private suspend fun getFirstImageURL(propID: String): String {
     return try {
