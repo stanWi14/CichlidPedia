@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
@@ -53,19 +53,6 @@ fun MenuScreen(navController: NavHostController) {
     }
 }
 
-
-@Composable
-fun NewsScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "News Screen", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-    }
-}
-
 @Composable
 fun ListScreen(navController: NavHostController) {
     val menuItems = MenuItems.getData()
@@ -73,6 +60,7 @@ fun ListScreen(navController: NavHostController) {
         modifier = Modifier
             .fillMaxSize()
             .background(com.example.chipedia.ui.theme.colorBlue)
+            .padding(vertical = 10.dp)
     ) {
         items(menuItems) { menuItem ->
             MenuItemCard(menuItem = menuItem, navController = navController)
@@ -81,21 +69,8 @@ fun ListScreen(navController: NavHostController) {
 }
 
 @Composable
-fun AboutUsScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "About Us Screen", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
 fun MenuItemCard(menuItem: MenuItems, navController: NavHostController) {
     var isExpanded by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -204,7 +179,9 @@ fun BottomNavigationBar(
         BottomNavItem.List,
         BottomNavItem.AboutUs
     )
-    NavigationBar {
+    NavigationBar(
+        containerColor = colorRed
+    ) {
         items.forEach { item ->
             NavigationBarItem(
                 icon = { Icon(item.icon, contentDescription = item.title) },
