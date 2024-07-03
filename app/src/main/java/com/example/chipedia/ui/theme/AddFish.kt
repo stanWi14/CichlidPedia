@@ -7,23 +7,31 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -33,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -114,6 +123,7 @@ fun uploadImageToFirebaseStorage(imageUri: Uri, docId: String, index: Int, onCom
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddFish(navController: NavHostController) {
@@ -133,6 +143,7 @@ fun AddFish(navController: NavHostController) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     var selectedText by remember { mutableStateOf(locationList[0]) }
+    var currentStep by remember { mutableStateOf(1) }
 
     val launcher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
@@ -154,146 +165,234 @@ fun AddFish(navController: NavHostController) {
                 .verticalScroll(rememberScrollState())
                 .fillMaxSize()
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Button(onClick = { launcher.launch("image/*") }) {
-                    Text(text = "Select Image")
-                }
+            when (currentStep) {
+                1 -> {
+                    // First step
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { launcher.launch("image/*") }) {
+                            Text(text = "Select Image")
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier
-                        .horizontalScroll(rememberScrollState())
-                        .fillMaxWidth()
-                ) {
-                    selectedImageUris.forEach { uri ->
-                        Image(
-                            painter = rememberImagePainter(data = uri, builder = {
-                                crossfade(true)
-                            }),
-                            contentDescription = null,
+                        Column(
                             modifier = Modifier
-                                .size(200.dp)
-                                .padding(horizontal = 4.dp),
-                            contentScale = ContentScale.Crop
-                        )
+                                .fillMaxSize()
+                                .horizontalScroll(rememberScrollState())
+                        ) {
+                            selectedImageUris.forEachIndexed { index, uri ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                ) {
+                                    Column {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            // Image
+                                            Image(
+                                                painter = rememberImagePainter(
+                                                    data = uri,
+                                                    builder = {
+                                                        crossfade(true)
+                                                    }
+                                                ),
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .height(200.dp)
+                                                    .fillMaxWidth()
+                                                    .aspectRatio(1.7f), // Maintain image's original aspect ratio
+                                                contentScale = ContentScale.Crop
+                                            )
+
+                                            // Close Button
+                                            IconButton(
+                                                onClick = {
+                                                    // Remove the selected image URI from the list
+                                                    val updatedUris =
+                                                        selectedImageUris.toMutableList()
+                                                    updatedUris.removeAt(index)
+                                                    selectedImageUris = updatedUris
+                                                },
+                                                modifier = Modifier
+                                                    .padding(8.dp)
+                                                    .align(Alignment.TopEnd) // Align the button to the top right corner
+                                                    .background(Color.White, shape = CircleShape)
+                                            ) {
+                                                Icon(
+                                                    modifier = Modifier.size(24.dp),
+                                                    imageVector = Icons.Default.Close,
+                                                    contentDescription = "Delete"
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        FloatingActionButton(
+                            onClick = {
+                                // Move to the next step
+                                currentStep = 2
+                            },
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(text = "Next")
+                        }
+
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Spacer(modifier = Modifier.height(16.dp))
-
-                TextField(
-                    value = scienName,
-                    onValueChange = { scienName = it },
-                    label = { Text("Enter Fish Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                TextField(
-                    value = marketName,
-                    onValueChange = { marketName = it },
-                    label = { Text("Enter Market Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = {
-                        expanded = !expanded
-                    }) {
+                2 -> {
+                    // Second step
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         TextField(
-                            value = selectedText,
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .fillMaxWidth()
+                            value = scienName,
+                            onValueChange = { scienName = it },
+                            label = { Text("Enter Fish Name") },
+                            modifier = Modifier.fillMaxWidth()
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }) {
-                            locationList.forEach { item ->
-                                DropdownMenuItem(text = { Text(text = item) }, onClick = {
-                                    selectedText = item
-                                    location = item
-                                    expanded = false
-                                })
+                        TextField(
+                            value = marketName,
+                            onValueChange = { marketName = it },
+                            label = { Text("Enter Market Name") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Add your fields for the second step here
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = {
+                                expanded = !expanded
+                            }) {
+                                TextField(
+                                    value = selectedText,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(
+                                            expanded = expanded
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .menuAnchor()
+                                        .fillMaxWidth()
+                                )
+
+                                ExposedDropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false }) {
+                                    locationList.forEach { item ->
+                                        DropdownMenuItem(text = { Text(text = item) }, onClick = {
+                                            selectedText = item
+                                            location = item
+                                            expanded = false
+                                        })
+                                    }
+                                }
                             }
+                        }
+                        Button(onClick = {
+                            // Move to the next step
+                            currentStep = 3
+                        }) {
+                            Text(text = "Next")
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
 
-                TextField(
-                    value = maxSize,
-                    onValueChange = { maxSize = it },
-                    label = { Text("Enter Max Size") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+                3 -> {
+                    // Third step
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Add your fields for the third step here
 
-                TextField(
-                    value = lifeSpan,
-                    onValueChange = { lifeSpan = it },
-                    label = { Text("Enter Life Span") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+                        TextField(
+                            value = maxSize,
+                            onValueChange = { maxSize = it },
+                            label = { Text("Enter Max Size") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                TextField(
-                    value = aggresion,
-                    onValueChange = { aggresion = it },
-                    label = { Text("Enter Aggression") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+                        TextField(
+                            value = lifeSpan,
+                            onValueChange = { lifeSpan = it },
+                            label = { Text("Enter Life Span") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                TextField(
-                    value = breeding,
-                    onValueChange = { breeding = it },
-                    label = { Text("Enter Breeding Type") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+                        TextField(
+                            value = aggresion,
+                            onValueChange = { aggresion = it },
+                            label = { Text("Enter Aggression") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                TextField(
-                    value = desc,
-                    onValueChange = { desc = it },
-                    label = { Text("Enter Description") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+                        TextField(
+                            value = breeding,
+                            onValueChange = { breeding = it },
+                            label = { Text("Enter Breeding Type") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                Button(onClick = {
-                    generateDocIdAndPushField(
-                        selectedImageUris,
-                        scienName,
-                        marketName,
-                        maxSize,
-                        lifeSpan,
-                        aggresion,
-                        breeding,
-                        location,
-                        desc,
-                        navigateBackFunction,
-                        context
-                    )
-                }) {
-                    Text(text = "Upload")
+                        TextField(
+                            value = desc,
+                            onValueChange = { desc = it },
+                            label = { Text("Enter Description") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = {
+                            // Perform final action or submit form
+                            // For example:
+                            generateDocIdAndPushField(
+                                selectedImageUris,
+                                scienName,
+                                marketName,
+                                maxSize,
+                                lifeSpan,
+                                aggresion,
+                                breeding,
+                                location,
+                                desc,
+                                navigateBackFunction,
+                                context
+                            )
+                        }) {
+                            Text(text = "Upload")
+                        }
+                    }
                 }
             }
+
         }
     }
 }

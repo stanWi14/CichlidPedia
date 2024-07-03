@@ -1,6 +1,7 @@
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,8 +13,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Card        // Handle any errors
-
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,12 +26,16 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -39,19 +44,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
+import com.example.chipedia.module.Document
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.storage
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-
-
-data class Document(
-    val colID: String,
-    val docID: String,
-    val marketName: String,
-    val sciName: String,
-    val imageUrl: String
-)
 
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -65,61 +64,66 @@ fun ListScreen(value: Int, navController: NavHostController) {
         loadData(collectionFish, propertyList)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = collectionFish,
-                        color = Color.White,
-                    )
-                },
-                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = com.example.chipedia.ui.theme.colorRed),
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                }
+    Scaffold(topBar = {
+        TopAppBar(title = {
+            Text(
+                text = collectionFish,
+                color = Color.White,
             )
         },
-        content = {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(com.example.chipedia.ui.theme.colorBlue)
-            ) {
-                Spacer(modifier = Modifier.height(60.dp))
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(propertyList.value) { document ->
-                        PropertyCard(document)
-                    }
+            colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = com.example.chipedia.ui.theme.colorRed),
+            navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White
+                    )
+                }
+            })
+    }, content = {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(com.example.chipedia.ui.theme.colorBlue)
+        ) {
+            Spacer(modifier = Modifier.height(60.dp))
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(propertyList.value) { document ->
+                    PropertyCard(value, document, propertyList, navController)
                 }
             }
         }
-    )
+    })
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PropertyCard(document: Document) {
-    // Extracting properties from the document
+fun PropertyCard(
+    value: Int,
+    document: Document,
+    propertyList: MutableState<List<Document>>,
+    navController: NavHostController
+) {
+    var isDeleting by remember { mutableStateOf(false) }
+    var isMarketNameHeld by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
     val marketName = document.marketName
     val sciName = document.sciName
     val imageUrl = document.imageUrl
+    val docID = document.docID
+    val colID = document.colID
 
     Card(
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier.padding(8.dp),
+        onClick = {
+            navController.navigate("destination_route/$value/${document.docID}")
+        }
     ) {
         val gradientRedWhite = Brush.verticalGradient(
             0f to com.example.chipedia.ui.theme.colorTransparent,
             500f to com.example.chipedia.ui.theme.coloeBlack
         )
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
             Image(
                 painter = rememberImagePainter(imageUrl),
@@ -146,16 +150,36 @@ fun PropertyCard(document: Document) {
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp,
+                    modifier = Modifier
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onLongPress = {
+                                    isMarketNameHeld = !isMarketNameHeld
+                                }
+                            )
+                        }
                 )
                 Text(
                     text = sciName,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = 15.sp,
-                        fontStyle = FontStyle.Italic
+                        fontSize = 15.sp, fontStyle = FontStyle.Italic
                     ),
                     color = Color.White,
                     letterSpacing = 1.sp,
                 )
+                if (isMarketNameHeld) {
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                isDeleting = true
+                                deleteData(colID, docID, propertyList)
+                                isDeleting = false
+                            }
+                        }, enabled = !isDeleting
+                    ) {
+                        Text(text = "Delete")
+                    }
+                }
             }
         }
     }
@@ -163,8 +187,7 @@ fun PropertyCard(document: Document) {
 
 
 private suspend fun loadData(
-    collectionName: String,
-    propertyList: MutableState<List<Document>>
+    collectionName: String, propertyList: MutableState<List<Document>>
 ) {
     val db = FirebaseFirestore.getInstance()
     val propertyCollection = db.collection(collectionName)
@@ -185,6 +208,41 @@ private suspend fun loadData(
         // Handle failure
         e.printStackTrace()
     }
+}
+
+suspend fun deleteData(
+    colID: String, docID: String, propertyList: MutableState<List<Document>>
+) {
+    val firestore = FirebaseFirestore.getInstance()
+    val collectionRef = firestore.collection(colID)
+    val documentRef = collectionRef.document(docID)
+
+    try {
+        documentRef.delete().await()
+        println("Document '$docID' deleted successfully from Firestore.")
+
+        // Filter out the deleted document from the list
+        propertyList.value = propertyList.value.filter { it.docID != docID }
+    } catch (e: Exception) {
+        println("Error deleting document from Firestore: ${e.message}")
+        return // Return to prevent further execution if deleting from Firestore fails
+    }
+    val storage = FirebaseStorage.getInstance().reference
+    val storageRef = storage.child(docID)
+//    try {
+    storageRef.listAll()
+        .addOnSuccessListener { listResult ->
+            listResult.items.forEach { item ->
+                item.delete().addOnSuccessListener {
+                    // Image deleted successfully
+                }.addOnFailureListener { exception ->
+                    // Handle any errors
+                }
+            }
+        }
+        .addOnFailureListener { exception ->
+            // Handle any errors
+        }
 }
 
 

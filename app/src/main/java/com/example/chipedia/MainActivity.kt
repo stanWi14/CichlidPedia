@@ -15,7 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.chipedia.ui.theme.AddFish
+import com.example.chipedia.ui.theme.FishScreen
 import com.example.chipedia.ui.theme.MenuScreen
 import com.example.chipedia.ui.theme.OnBoarding
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -30,9 +30,6 @@ fun Navigation() {
         composable("onBoardingScreen") {
             OnBoarding(navController)
         }
-        composable("addFish") {
-            AddFish(navController)
-        }
         composable("menuScreen") {
             MenuScreen(navController)
         }
@@ -42,6 +39,16 @@ fun Navigation() {
         ) { navBackStackEntry ->
             val value = navBackStackEntry.arguments?.getInt("value") ?: 0
             ListScreen(value = value, navController)
+        }
+        composable(
+            "destination_route/{putValue}/{docID}",
+            arguments = listOf(
+                navArgument("putValue") { type = NavType.IntType },
+                navArgument("docID") { type = NavType.StringType }
+            )) { backStackEntry ->
+            val putValue = backStackEntry.arguments?.getInt("putValue") ?: 0
+            val docID = backStackEntry.arguments?.getString("docID").orEmpty()
+            FishScreen(navController, putValue, docID)
         }
     }
 }

@@ -37,4 +37,11 @@
     <string name="valueIndia">India</string>
 
 
+    // satuan
+    <string name="satCelcius">°C</string>
+    <string name="satMKuadrat">m²</string>
+    <string name="satMKubik">m³</string>
+
+
+
 </resources>
